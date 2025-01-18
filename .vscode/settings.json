@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.drawio": "xml",
+        "esp_log.h": "c",
+        "task.h": "c",
+        "gpio.h": "c",
+        "sdkconfig.h": "c",
+        "freertos.h": "c"
+    },
+    "idf.portWin": "COM15"
+}
