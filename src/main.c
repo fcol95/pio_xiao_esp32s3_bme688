@@ -197,7 +197,7 @@ void bme688_task(void *pvParameter)
         ret = bme68x_get_data(BME68X_FORCED_MODE, &data, &n_fields, &bme688_handle);
         if (ret == BME68X_OK && n_fields > 0)
         {
-            ESP_LOGI(TAG, "Temperature: %.2f°C, Pressure: %.2fhPa, Humidity: %.2f%%, Gas Resistance: %.2fOhms.", data.temperature, data.pressure / 100.0, data.humidity, data.gas_resistance);
+            ESP_LOGI(TAG, "Temperature: %.1f°C, Pressure: %.1fhPa, Humidity: %.1f%%, Gas Resistance: %.2fMOhms.", data.temperature, data.pressure / 100.0, data.humidity, data.gas_resistance / 1e6);
         }
         else
         {
