@@ -132,35 +132,63 @@ void bme688_task(void *pvParameter)
     if (ret != BME68X_OK)
     {
         ESP_LOGE(TAG, "BME68x initialization failed");
+        return;
     }
     else
     {
         ESP_LOGI(TAG, "BME68x initialization succeeded");
     }
 
-    struct bme68x_conf conf;
-    struct bme68x_heatr_conf heatr_conf;
     struct bme68x_data data;
     uint8_t n_fields;
 
     // Set sensor configuration
-    conf.filter = BME68X_FILTER_OFF;
-    conf.odr = BME68X_ODR_NONE;
-    conf.os_hum = BME68X_OS_16X;
-    conf.os_pres = BME68X_OS_1X;
-    conf.os_temp = BME68X_OS_2X;
-    bme68x_set_conf(&conf, &bme688_handle);
+    struct bme68x_conf conf =
+        {
+            .os_hum = BME68X_OS_16X,
+            .os_pres = BME68X_OS_1X,
+            .os_temp = BME68X_OS_2X,
+            .filter = BME68X_FILTER_OFF,
+            .odr = BME68X_ODR_NONE,
+        };
+    ret = bme68x_set_conf(&conf, &bme688_handle);
+    if (ret != BME68X_OK)
+    {
+        ESP_LOGE(TAG, "BME68x configuration failed");
+        return;
+    }
+    else
+    {
+        ESP_LOGI(TAG, "BME68x configuration succeeded");
+    }
 
     // Set heater configuration
-    heatr_conf.enable = BME68X_ENABLE;
-    heatr_conf.heatr_temp = 320; // Target temperature in degree Celsius
-    heatr_conf.heatr_dur = 150;  // Duration in milliseconds
-    bme68x_set_heatr_conf(BME68X_FORCED_MODE, &heatr_conf, &bme688_handle);
+    struct bme68x_heatr_conf heatr_conf =
+        {
+            .enable = BME68X_DISABLE,
+            .heatr_temp = 320, // Target temperature in degree Celsius
+            .heatr_dur = 150,  // Duration in milliseconds
+        };
+    ret = bme68x_set_heatr_conf(BME68X_FORCED_MODE, &heatr_conf, &bme688_handle);
+    if (ret != BME68X_OK)
+    {
+        ESP_LOGE(TAG, "BME68x heater configuration failed");
+        return;
+    }
+    else
+    {
+        ESP_LOGI(TAG, "BME68x heater configuration succeeded");
+    }
 
     while (1)
     {
         // Set sensor to forced mode
-        bme68x_set_op_mode(BME68X_FORCED_MODE, &bme688_handle);
+        ret = bme68x_set_op_mode(BME68X_FORCED_MODE, &bme688_handle);
+        if (ret != BME68X_OK)
+        {
+            ESP_LOGE(TAG, "BME68x setting operation mode failed");
+            return;
+        }
 
         // Wait for the measurement to complete
         vTaskDelay(pdMS_TO_TICKS(1 + (bme68x_get_meas_dur(BME68X_FORCED_MODE, &conf, &bme688_handle) / 1000)));
@@ -174,6 +202,7 @@ void bme688_task(void *pvParameter)
         else
         {
             ESP_LOGE(TAG, "Failed to get sensor data");
+            return;
         }
 
         // Wait for 1 second before the next read
@@ -181,7 +210,7 @@ void bme688_task(void *pvParameter)
     }
 }
 
-void i2c_master_init()
+esp_err_t i2c_master_init(void)
 {
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
@@ -191,8 +220,19 @@ void i2c_master_init()
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
         .master.clk_speed = 400000, // I2C clock speed (400 kHz)
     };
-    i2c_param_config(I2C_NUM_0, &conf);
-    i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0);
+    esp_err_t ret = i2c_param_config(I2C_NUM_0, &conf);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "I2C parameter configuration failed");
+        return ESP_FAIL;
+    }
+    ret = i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "I2C parameter configuration failed");
+        return ESP_FAIL;
+    }
+    return ESP_OK;
 }
 
 void print_board_info(void)
@@ -231,8 +271,11 @@ void app_main()
     ESP_LOGI(TAG, "Starting program...");
 
     // Drivers Init
-    i2c_master_init();
+    esp_err_t i2c_ret = i2c_master_init();
 
     xTaskCreate(&blink_task, "blink_task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
-    xTaskCreate(&bme688_task, "bme688_task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+    if (i2c_ret == ESP_OK)
+    {
+        xTaskCreate(&bme688_task, "bme688_task", configMINIMAL_STACK_SIZE * 2, NULL, 5, NULL);
+    }
 }
