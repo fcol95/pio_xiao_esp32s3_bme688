@@ -185,8 +185,8 @@ void i2c_master_init()
 {
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
-        .sda_io_num = GPIO_NUM_8, // XIAO ESP32S3 SDA GPIO
-        .scl_io_num = GPIO_NUM_9, // XIAO ESP32S3 SCL GPIO
+        .sda_io_num = GPIO_NUM_5, // XIAO ESP32S3 SDA GPIO
+        .scl_io_num = GPIO_NUM_6, // XIAO ESP32S3 SCL GPIO
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
         .master.clk_speed = 400000, // I2C clock speed (400 kHz)
