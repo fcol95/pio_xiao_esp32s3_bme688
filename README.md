@@ -11,3 +11,6 @@ References https://community.platformio.org/t/how-to-use-jtag-built-in-debugger-
 5. Install libusbK driver for USB JTAG/serial debug unit (interface 2).
 6. Use platformio.ini from this project and update COM ports.
 7. Upload and debug should now work through esp-builtin interface!
+
+## Buy me a coffee ☕ (or a beer 🍺)
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/fcol95)
